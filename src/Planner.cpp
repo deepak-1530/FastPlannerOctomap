@@ -97,7 +97,7 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
 ///////////////////////////////////////////////////////////////////
 /**  Plan the path until goal is reached **/
-void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
+void plan(ros::Publisher path,  ros::Publisher map)
 {
     while(!DESTINATION_REACHED || ros::ok()) /** until the goal is reached or the node is killed, keep running the process **/
     {
@@ -277,8 +277,7 @@ int main(int argc, char **argv)
     ros::Subscriber goal    = n.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal",1,goal_pose_cb);
  
     /** Publishers **/
-    ros::Publisher path     = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); // one path at a time
-    ros::Publisher pathROS     = n.advertise<nav_msgs::Path>("/fastPlanner_pathROS",1); // one path at a time
+    ros::Publisher path     = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
     ros::Publisher map      = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
 
     ros::Rate rate(20);
@@ -312,7 +311,7 @@ int main(int argc, char **argv)
 
         kAstar.setParam(n); // set the fast planner parameters
 
-        plan(path, pathROS, map);
+        plan(path, map);
     }
 
     return 0;
