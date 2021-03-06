@@ -1,4 +1,3 @@
-// test how to do replanning effectively while updating the trajectory
                                                                                 /** 
                                                                                  * Fast Planner with Octomap and EDT3D library 
                                                                                 **/
@@ -8,19 +7,18 @@
  * Planning in the window using kino-dynamic A* algorithm
  * Horizon limitation due to limitation of range sensor
  * Drone controlled using PX4-Offboard position control
- * Yaw compensation to run-on hardware
 **/
 
 #include"FastPlannerOctomap/utils.h"
-#include <math.h>
 
 /** Planning and mapping headers **/
 #include"FastPlannerOctomap/kinodynamic_astar.h"
-//#include"FastPlanner_Octomap/non_uniform_bspline.h"
-//#include"FastPlanner_Octomap/bspline_optimizer.h"
+
 #include"FastPlannerOctomap/Map.h"
 
 #include"std_msgs/Float64.h"
+
+#include <math.h>
 
 /** Drone states for planner **/
 Eigen::Vector3d goalPose, currPose, startPose, startVel, startAcc, goalVel;
@@ -29,10 +27,7 @@ Eigen::Vector3d goalPose, currPose, startPose, startVel, startAcc, goalVel;
 std::vector<Eigen::Vector3d> trajectory;
 nav_msgs::Path generatedPath;
 float yaw = 0.0; // yaw at each position
-float startHeading = 0.0;
 
-// ROS trajectory
-nav_msgs::Path generatedPathROS;
 
 /** time step to generate the trajectory **/
 float deltaT = 0.5;
@@ -51,21 +46,9 @@ int count;     // count for planning iteration
 
 #define INF 1000 // inifinity
 
-/** For compensating yaw on hardware **/
-bool compensateYaw = false;
-float headingThreshold = 90.0;
-std_msgs::Float64 globalHeading;
-int testOnHardware = 0;
-
 // trajectory regeneration
 std::vector<Eigen::Vector3d> prevTraj;
 
-
-/** Bspline optimization **/
-float control_pts_distance = 0.5;
-float max_velocity = 2.0;
-float ts = control_pts_distance/max_velocity;
-//BsplineOptimizer::Ptr splineOptimizer;
 
 /** Cost Map visualization **/
 visualization_msgs::MarkerArray costMap_vis;
@@ -172,52 +155,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
             kAstar.init(costMap3D.start, costMap3D.end, currPose);
             kAstar.setEnvironment(&DistMap);
 
-            // pass the map to the optimizer
-//            splineOptimizer->setEnvironment(&DistMap);
-
-            // publish the costMap as marker array for visualization
-            //costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
-
-            // once the new map is received -> check the points in the previous trajectory if they hit new obstacles -> if that is so-> then replan from that point and tell controller to either go on hold at the current point if it has already crossed that point
-            // slow down the controller in order to do replanning as well.
-
-            for(auto i = prevTraj.begin(); i!=prevTraj.end(); i++)
-            {
-                // check the point for collision
-                Eigen::Vector3d chkPt = *i;
-
-                // get the collision distance of this point from the nearest obstacle
-                octomap::point3d chkPtO;
-                chkPtO.x() = chkPt(0);
-                chkPtO.y() = chkPt(1);
-                chkPtO.z() = chkPt(2);
-
-                octomap::point3d test;
-
-                // now calculate the distance from the nearest obstacle
-                float distance;
-                DistMap.getDistanceAndClosestObstacle(chkPtO, distance, test);
-
-                if(distance<0.75)
-                {
-                    if(i == prevTraj.begin())
-                    {
-                        startPose = *i;
-                    }
-                    else
-                    {
-                        startPose = *(i-1);
-                    }
-                }
-
-                else{
-                    startPose = *i;
-                }
-
-            }
-
-
-
             // run the planner now (x is the status of the planner)
             int x;
             
@@ -230,7 +167,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
                 {
                     x = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, false, false, 0.0);
                 }
-            
             
             
             std::cout<<"Planner output status is >>>>> "<<x<<std::endl;
@@ -256,48 +192,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
             std::vector<Eigen::Vector3d> currTraj = kAstar.getKinoTraj(deltaT);
             prevTraj = currTraj;
 
-            /** Optimize the trajectory **/
-            std::vector<Eigen::Vector3d> point_set, start_end_derivatives;
-     //       kAstar.getSamples(ts, point_set, start_end_derivatives);
-
-            /** Get Bspline control points **/
-            Eigen::MatrixXd ctrl_pts;
-            //NonUniformBspline::parameterizeToBspline(ts, point_set, start_end_derivatives, ctrl_pts);
-            
-            /** BSpline of order 3 **/
-            //NonUniformBspline init(ctrl_pts, 3, ts);
-
-            /** Optimize the spline **/
-            //int cost_function = BsplineOptimizer::NORMAL_PHASE;
-
-            //if(x==2)
-           // {
-           //     cost_function |= BsplineOptimizer::ENDPOINT;
-           // }
-            
-
-
-
-
-
-
-            std::cout<<"Global heading is ... "<<globalHeading.data<<std::endl; 
-            /*
-            if(count==0)
-                startHeading = 90.0 - globalHeading.data;
-            else
-            {
-                startHeading += yaw;
-            }
-            */
-           if(count == 0)
-           {
-                startHeading = 90.0 - globalHeading.data;
-                std::cout<<"Start Heading is .... "<<startHeading<<std::endl;
-           } 
-
-            std::cout<<" ------------------------- "<<startHeading<<" --------------- "<<std::endl;
-
             count++;
 
             for(auto i = currTraj.begin(); i != currTraj.end(); i++)
@@ -318,10 +212,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
                     pROS.pose.position.x = pos(0);
                     pROS.pose.position.y = pos(1);
                     pROS.pose.position.z = pos(2);
-
-                    generatedPathROS.header.stamp = ros::Time::now();
-                    generatedPathROS.header.frame_id = "map";
-                    generatedPathROS.poses.push_back(pROS);
 
                 if(i!=currTraj.end()-1)
                     {
@@ -346,7 +236,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
 
             // publish the path
             path.publish(generatedPath);
-           // pathROS.publish(generatedPathROS);
 
             // insert this in the global trajectory
             trajectory.insert(trajectory.end(), currTraj.begin(), currTraj.end());
@@ -401,9 +290,6 @@ int main(int argc, char **argv)
 
     ros::Rate rate(20);
 
-    std::cout<<"Hardware testing ...? ";
-    std::cin>>testOnHardware;
-
     if(testOnHardware==1)
     {
         compensateYaw = true;
@@ -437,8 +323,7 @@ int main(int argc, char **argv)
         std::cout<<"Starting planning now ..."<<std::endl;
 
         kAstar.setParam(n); // set the fast planner parameters
-//        splineOptimizer.reset(new BsplineOptimizer::BsplineOptimizer)
-//        splineOptimizer.setParam(n);
+
         plan(path, pathROS, map);
     }
 
