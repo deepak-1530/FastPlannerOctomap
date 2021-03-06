@@ -26,7 +26,7 @@ Eigen::Vector3d goalPose, currPose, startPose, startVel, startAcc, goalVel;
 /** Overall trajectory **/
 std::vector<Eigen::Vector3d> trajectory;
 nav_msgs::Path generatedPath;
-float yaw = 0.0; // yaw at each position
+
 
 
 /** time step to generate the trajectory **/
@@ -89,12 +89,6 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
     std::cout<<"Goal Pose is ... "<<goalPose.transpose()<<std::endl;
     std::cout<<"\n";
-}
-
-void heading_cb(std_msgs::Float64 msg)
-{
-    globalHeading = msg;
-  //  std::cout<<globalHeading.data<<std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -205,8 +199,8 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
 
                 if(-INF<pos(0)<INF && -INF<pos(1)<INF && -INF<pos(2)<INF)
                 { 
-                    p.pose.position.x = pos(0);//*cos(startHeading*3.14/180) - pos(1)*sin(startHeading*3.14/180);
-                    p.pose.position.y = pos(1);//*cos(startHeading*3.14/180) + pos(0)*sin(startHeading*3.14/180);
+                    p.pose.position.x = pos(0);
+                    p.pose.position.y = pos(1);
                     p.pose.position.z = pos(2);
 
                     pROS.pose.position.x = pos(0);
@@ -228,7 +222,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
                         generatedPath.header.stamp = ros::Time::now();
                         generatedPath.header.frame_id = "map";
                         generatedPath.poses.push_back(p); 
-                        yaw = currYaw;
                     }
                 }
                     ros::spinOnce();
@@ -281,19 +274,13 @@ int main(int argc, char **argv)
     ros::Subscriber oct     = n.subscribe<octomap_msgs::Octomap>("/octomap_binary",1,octomap_cb);
     ros::Subscriber pos     = n.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose",10,local_pose_cb);
     ros::Subscriber goal    = n.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal",1,goal_pose_cb);
-    ros::Subscriber heading = n.subscribe<std_msgs::Float64>("/mavros/global_position/compass_hdg",1,heading_cb);
-
+ 
     /** Publishers **/
     ros::Publisher path     = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); // one path at a time
     ros::Publisher pathROS     = n.advertise<nav_msgs::Path>("/fastPlanner_pathROS",1); // one path at a time
     ros::Publisher map      = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
 
     ros::Rate rate(20);
-
-    if(testOnHardware==1)
-    {
-        compensateYaw = true;
-    }
 
     std::cout<<"Start over ...? ";
     std::cin>>startOver;
