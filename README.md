@@ -65,7 +65,8 @@
 ***
 
 ## Install and Run (Tested in ros melodic)
-
+### building package
+* sudo apt-get install libeigen3-dev
 * mkdir catkin_ws
 * cd catkin_ws
 * mkdir src
@@ -74,5 +75,17 @@
 * cd ..
 * catkin_make
 
+### Running the Planner
+#### Simulation
+* **Terminal-1** : cd PX4-Autopilot && sudo no_sim=1 make px4_sitl_gazebo
+* **Terminal-2** : cd PX4-Autpilot && source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default && roslaunch gazebo_ros empty_world.launch (set your world file as required). On the gazebo window, select iris_depth_camera from the left panel.
+* **Terminal-3** : cd catkin_ws && roslaunch FastPlannerOctomap MappingSim.launch (give goal location using 2D Nav Goal option)
+* **Terminal-4** : rosrun FastPlannerOctomap Planner (or noYawPlanner if you want to plan the trajectory keeping the heading or yaw of the drone fixed). For the startOver option select either 1 or 0. Refer to the source code (FastPlannerOctomap/src/kinodynamic_astar.cpp and Planner.cpp for details). Also give the height (in metres) of the goal location when prompted.
+* **Terminal-5** : rosrun FastPlannerOctomap fastController (or slowController (both are same except **fastController** keeps publishing the setpoints at a fixed rate whereas **slowController** publishes the next waypoint only when the drone reaches the currently given waypoint))
 
-
+### Running on hardware
+* **Terminal-1** : Launch the depth camera (I used realsense_ros package and rs_camera.launch file)
+* **Terminal-2** : roslaunch mavros px4.launch 
+* **Terminal-3** : roslaunch FastPlannerOctomap MappingDrone.launch
+* Running the planner and controller remain the same as in simulation.
+* Remote Desktop is used to run rviz and give the goal location.
