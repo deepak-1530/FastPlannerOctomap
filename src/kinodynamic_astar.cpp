@@ -25,7 +25,7 @@
  * Source file to implement Kinodynamic A* Planning
 **/
 
-#include "FastPlanner_Octomap/kinodynamic_astar.h"
+#include "FastPlannerOctomap/kinodynamic_astar.h"
 #include <sstream>
 #include<dynamicEDT3D/dynamicEDTOctomap.h>
 

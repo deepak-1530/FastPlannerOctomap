@@ -10,13 +10,13 @@
  * Yaw compensation to run-on hardware
 **/
 
-#include"FastPlanner_Octomap/utils.h"
+#include"FastPlannerOctomap/utils.h"
 
 /** Planning and mapping headers **/
-#include"FastPlanner_Octomap/kinodynamic_astar.h"
+#include"FastPlannerOctomap/kinodynamic_astar.h"
 //#include"FastPlanner_Octomap/non_uniform_bspline.h"
 //#include"FastPlanner_Octomap/bspline_optimizer.h"
-#include"FastPlanner_Octomap/Map.h"
+#include"FastPlannerOctomap/Map.h"
 
 #include"std_msgs/Float64.h"
 
