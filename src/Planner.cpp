@@ -207,13 +207,10 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
                     p.pose.position.y = pos(1);
                     p.pose.position.z = pos(2);
 
-                    pROS.pose.position.x = pos(0);
-                    pROS.pose.position.y = pos(1);
-                    pROS.pose.position.z = pos(2);
-
                 if(i!=currTraj.end()-1)
                     {
                         pos_next = *(i+1);
+
                         float currYaw = atan2((pos_next(1) - pos(1)),(pos_next(0) - pos(0)));
                         float qz = sin(currYaw/2.0);
                         float qw = cos(currYaw/2.0);
@@ -307,7 +304,7 @@ int main(int argc, char **argv)
         std::cout<<"\n";
         std::cout<<"Setting initial velocity and acceleration .."<<std::endl;
 
-        goalVel = Eigen::Vector3d::Zero();  // velocity at goal location set to 0
+        goalVel  = Eigen::Vector3d::Zero();  // velocity at goal location set to 0
         startVel = Eigen::Vector3d::Zero(); // starting with 0 initial velocity i.e. static 
         startAcc = Eigen::Vector3d::Ones();  // set the starting acceleration as (1,1,1)
         
