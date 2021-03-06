@@ -87,7 +87,7 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
     goalPose(1) = pose.pose.position.y;
     
     std::cout<<"Enter the height at the goal point ";
-    std::cin<<goalPose(2)<<std::endl;
+    std::cin>>goalPose(2);
 
     goalPose(2) = 1;
 
