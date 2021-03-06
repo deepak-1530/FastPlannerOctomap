@@ -83,7 +83,7 @@
 * **Terminal-4** : rosrun FastPlannerOctomap Planner (or noYawPlanner if you want to plan the trajectory keeping the heading or yaw of the drone fixed). For the startOver option select either 1 or 0. Refer to the source code (FastPlannerOctomap/src/kinodynamic_astar.cpp and Planner.cpp for details). Also give the height (in metres) of the goal location when prompted.
 * **Terminal-5** : rosrun FastPlannerOctomap fastController (or slowController (both are same except **fastController** keeps publishing the setpoints at a fixed rate whereas **slowController** publishes the next waypoint only when the drone reaches the currently given waypoint))
 
-### Running on hardware
+#### Running on hardware
 * **Terminal-1** : Launch the depth camera (I used realsense_ros package and rs_camera.launch file)
 * **Terminal-2** : roslaunch mavros px4.launch 
 * **Terminal-3** : roslaunch FastPlannerOctomap MappingDrone.launch
