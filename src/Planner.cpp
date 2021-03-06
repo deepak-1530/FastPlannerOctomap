@@ -151,6 +151,9 @@ void plan(ros::Publisher path,  ros::Publisher map)
             kAstar.init(costMap3D.start, costMap3D.end, currPose);
             kAstar.setEnvironment(&DistMap);
 
+            // visualize the EDT Map
+            costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
+
             // run the planner now (x is the status of the planner)
             int x;
             
