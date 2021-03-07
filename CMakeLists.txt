@@ -39,11 +39,8 @@ target_link_libraries(Planner ${catkin_LIBRARIES} ${DYNAMICEDT3D_LIBRARIES})
 add_executable(noYawPlanner src/noYawPlanner.cpp src/kinodynamic_astar.cpp)
 target_link_libraries(noYawPlanner ${catkin_LIBRARIES} ${DYNAMICEDT3D_LIBRARIES})
 
-add_executable(slowController src/slowController.cpp)
-target_link_libraries(slowController ${catkin_LIBRARIES})
-
-add_executable(fastController src/fastController.cpp)
-target_link_libraries(fastController ${catkin_LIBRARIES})
+add_executable(Controller src/Controller.cpp)
+target_link_libraries(Controller ${catkin_LIBRARIES})
 
 add_executable(pubCamPose src/pubCamPose.cpp)
 target_link_libraries(pubCamPose ${catkin_LIBRARIES})
