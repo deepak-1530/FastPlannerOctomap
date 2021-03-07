@@ -292,14 +292,6 @@ int main(int argc, char **argv)
 
     ros::Rate rate(20);
 
-    std::cout<<"Hardware testing ...? ";
-    std::cin>>testOnHardware;
-
-    if(testOnHardware==1)
-    {
-        compensateYaw = true;
-    }
-
     std::cout<<"Start over ...? ";
     std::cin>>startOver;
 
