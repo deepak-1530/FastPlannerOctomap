@@ -53,18 +53,7 @@ int count;     // count for planning iteration
 
 #define INF 1000 // inifinity
 
-/** For compensating yaw on hardware **/
-bool compensateYaw = false;
-float headingThreshold = 90.0;
 std_msgs::Float64 globalHeading;
-int testOnHardware = 0;
-
-
-/** Bspline optimization **/
-float control_pts_distance = 0.5;
-float max_velocity = 2.0;
-float ts = control_pts_distance/max_velocity;
-//BsplineOptimizer::Ptr splineOptimizer;
 
 /** Cost Map visualization **/
 visualization_msgs::MarkerArray costMap_vis;
@@ -109,6 +98,7 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
     std::cout<<"\n";
 }
 
+/** heading callback **/
 void heading_cb(std_msgs::Float64 msg)
 {
     globalHeading = msg;
@@ -172,10 +162,7 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
             kAstar.init(costMap3D.start, costMap3D.end, currPose);
             kAstar.setEnvironment(&DistMap);
 
-            // pass the map to the optimizer
-//            splineOptimizer->setEnvironment(&DistMap);
-
-            // publish the costMap as marker array for visualization
+            // publish the EDT Map
             costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
 
 
@@ -215,16 +202,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
             
             /** get the planned path **/
             std::vector<Eigen::Vector3d> currTraj = kAstar.getKinoTraj(deltaT);
-
-            std::cout<<"Global heading is ... "<<globalHeading.data<<std::endl; 
-
-           if(count == 0)
-           {
-                startHeading = 90.0 - globalHeading.data;
-                std::cout<<"Start Heading is .... "<<startHeading<<std::endl;
-           } 
-
-            std::cout<<" ------------------------- "<<startHeading<<" --------------- "<<std::endl;
 
             count++;
 
@@ -357,8 +334,6 @@ int main(int argc, char **argv)
         std::cout<<"Starting planning now ..."<<std::endl;
 
         kAstar.setParam(n); // set the fast planner parameters
-//        splineOptimizer.reset(new BsplineOptimizer::BsplineOptimizer)
-//        splineOptimizer.setParam(n);
         plan(path, pathROS, map);
     }
 
