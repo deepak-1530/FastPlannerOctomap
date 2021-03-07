@@ -33,8 +33,6 @@ float startHeading = 0.0;
 geometry_msgs::PoseStamped fix;
 float qX, qY, qZ, qW;
 
-// ROS trajectory
-nav_msgs::Path generatedPathROS;
 
 /** time step to generate the trajectory **/
 float deltaT = 0.08;
@@ -68,8 +66,6 @@ void octomap_cb(const octomap_msgs::Octomap octo)
     costMap3D.new_tree = octomap_msgs::binaryMsgToMap(octo);  // this is the abstract tree for an octomap
     costMap3D.tree = dynamic_cast<octomap::OcTree*>(costMap3D.new_tree);
 
-    //std::cout<<"final tree has "<<costMap3D.tree->getNumLeafNodes()<<" leaves"<<std::endl;
-
     // get the min and max of the map
     costMap3D.setMinMax();
     costMap3D.isOctomapUpdated = true;
@@ -92,7 +88,9 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
     goalPose(0) = pose.pose.position.x;
     goalPose(1) = pose.pose.position.y;
-    goalPose(2) = 3.0;
+    
+    std::cout<<"Enter the goal height ... ";
+    std::cin>>goalPose(2);
 
     std::cout<<"Goal Pose is ... "<<goalPose.transpose()<<std::endl;
     std::cout<<"\n";
@@ -106,7 +104,7 @@ void heading_cb(std_msgs::Float64 msg)
 
 ///////////////////////////////////////////////////////////////////
 /**  Plan the path until goal is reached **/
-void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
+void plan(ros::Publisher path, ros::Publisher map)
 {
     while(!DESTINATION_REACHED || ros::ok()) /** until the goal is reached or the node is killed, keep running the process **/
     {
@@ -208,7 +206,6 @@ void plan(ros::Publisher path, ros::Publisher pathROS, ros::Publisher map)
             for(auto i = currTraj.begin(); i != currTraj.end(); i++)
             {
                 geometry_msgs::PoseStamped p;
-                geometry_msgs::PoseStamped pROS;
                 Eigen::Vector3d pos = *i;
                 Eigen::Vector3d pos_next;
 
@@ -287,7 +284,6 @@ int main(int argc, char **argv)
 
     /** Publishers **/
     ros::Publisher path     = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); // one path at a time
-    ros::Publisher pathROS     = n.advertise<nav_msgs::Path>("/fastPlanner_pathROS",1); // one path at a time
     ros::Publisher map      = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
 
     ros::Rate rate(20);
@@ -326,7 +322,7 @@ int main(int argc, char **argv)
         std::cout<<"Starting planning now ..."<<std::endl;
 
         kAstar.setParam(n); // set the fast planner parameters
-        plan(path, pathROS, map);
+        plan(path, map);
     }
 
     return 0;
