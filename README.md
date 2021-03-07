@@ -64,9 +64,7 @@
 * GPS is used for localizing the drone 
 * Poses given by the EKF in PX4 is used (/mavros/local_position/pose)
 
-![](FastPlanner_Octomap.gif) 
-
-![](GardenAvoidance.gif)
+![](FastPlanner_OctomapAvoidance.gif) | ![](GardenAvoidance.gif)
 
 
 ***
