@@ -20,7 +20,7 @@ namespace Map3D
             octomap::point3d mapStart; // location where mapping starts or reset
             float mapUpdateThreshold;  // minimum distance the drone should travel w.r.to previous mapUpdate point for map to update again
             DynamicEDTOctomap* costMap;    // pointer to the EDT of the octomap
-            float xRange, yRange, zRange; // range in x,y,z dimensions (X->forward, y->sideways, z->vertical)
+            float edtMapRange; // range in x,y,z dimensions (X->forward, y->sideways, z->vertical for the Euclidean Distance Map)
             bool isOctomapUpdated;       // set true when map is updated
             
             //// member functions /////
@@ -48,10 +48,8 @@ Map3D::OctoMapEDT::OctoMapEDT()
 
     std::cout<<"\n";
 
-    xRange =  8.0; // forward (0<x<15)
-    yRange = 6.0;  // sideways(-3<y<3)
-    zRange = 6.0;  // vertical (-3<z<3)
-
+    edtMapRange =  8.0; 
+    
     mapUpdateThreshold = 1.0;
 
     std::cout<<"_______Setting the EDT range ... "<<"("<<xRange<<","<<yRange<<","<<zRange<<")"<<std::endl;
@@ -129,133 +127,19 @@ void Map3D::OctoMapEDT::setMapRange(Eigen::Vector3d pt)
     std::cout<<"Octomap point "<<p<<std::endl;
     
    /** set start coordinates **/
-
-    // X/Forward measurement is currPose + xRange;
-    start.x() = p.x() - xRange;
-
-    // For Y and Z dimensions, check if map of desired size (8,6,6) is possible or not. If not, then set map size to whatever is possible
-    if(p.y() - yRange/2.0 > min.y())
-    {
-        start.y() = p.y() - yRange/2.0;
-    }
-    else
-    {
-        start.y() = min.y();
-    }
-
-    if(p.z() - zRange/2.0 > min.z())
-    {
-        start.z() = p.z() - zRange/2.0;
-    }
-    else
-    {
-        start.z() = min.z();
-    }    
-
-    start.y() = p.y() - xRange;//yRange/2.0;
-    start.z() = p.z() - xRange;//zRange/2.0;
+    start.x() = p.x() - edtMapRange;
+    start.y() = p.y() - edtMapRange;;
+    start.z() = p.z() - edtMapRange;
 
    /** set end coordinates **/
-   end.x() = p.x() + xRange;
-
-   if(p.y() + yRange/2.0 > max.y())
-    {
-        end.y() = max.y();
-    }
-   else
-    {
-        end.y() = p.y() + yRange/2.0;
-    }
-
-   if(p.z() + zRange/2.0 > max.z())
-    {
-        end.z() = max.z();
-    }
-   else
-    {
-        end.z() = p.z() + zRange/2.0;
-    }   
-
-    end.y() = p.y() + xRange;
-    end.z() = p.z() + xRange;
+    end.x() = p.x() + edtMapRange;
+    end.y() = p.y() + edtMapRange;
+    end.z() = p.z() + edtMapRange;
 
     std::cout<<"Map from "<<start<<" to "<<end<<std::endl;
 
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/* Get the marker array for visualizing the cost map **/
-/*
-void Map3D::OctoMapEDT::getCostMapMarker(visualization_msgs::MarkerArray m, DynamicEDTOctomap *ptr, ros::Publisher pub)
-{
-    uint32_t shape = visualization_msgs::Marker::CUBE;
-    int count = 0;
-    double z = start.z() + end.z();
-    z = z/2.0;
-
-    for(octomap::OcTree::leaf_iterator it = start; it != end; ++it)
-    {
-        std::cout<<"Hello there!"<<std::endl;
-    }
-
-    for(double x = start.x(); x<end.x(); x++)
-    {
-        for(double y = start.y(); y<end.y(); y++)
-            {
-                        if(!ros::ok())
-                        {
-                            break;
-                        }
-                        // select the color using max Distance
-                        visualization_msgs::Marker marker;
-
-                        marker.header.frame_id = "map";
-                        marker.header.stamp = ros::Time::now();
-                        marker.ns = x+y+z;
-                        marker.id = 0;
-                        marker.type = shape;
-
-                        // set the marker actions. Options are add and delete
-                        marker.action = visualization_msgs::Marker::ADD;
-
-
-                        // set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
-                        marker.pose.position.x = x;
-                        marker.pose.position.y = y;
-                        marker.pose.position.z = z;
-
-                        marker.pose.orientation.x = 0.0;
-                        marker.pose.orientation.y = 0.0;
-                        marker.pose.orientation.z = 0.0;
-                        marker.pose.orientation.w = 1.0;
-
-                        // set the scale of the marker
-                        marker.scale.x = 0.75;
-                        marker.scale.y = 0.75;
-                        marker.scale.z = 0.75;
-
-                        // get the distance at each index in order to set the color for each voxel
-                        octomap::point3d pt(x,y,z);
-                        float dist = ptr->getDistance(pt);
-                        
-                        //std::cout<<dist<<std::endl;
-
-                        // Set the color -- be sure to set alpha to something non-zero!
-                        marker.color.r = 1 - (dist/5.0)*(dist/5.0);
-                        marker.color.g = 0.0;//1.0 - dist/5.0;
-                        marker.color.b = 0.0;//1.0 - dist/5.0;
-                        marker.color.a = 1.0;
-                    
-                        marker.lifetime = ros::Duration();
-                        m.markers.push_back(marker);
-            }
-    }
-
-    pub.publish(m);
-
-}
-*/
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /** publish the costmap obtained from the octree **/
@@ -305,10 +189,10 @@ void Map3D::OctoMapEDT::getCostMapMarker(visualization_msgs::MarkerArray m, Dyna
 
         // set the color of the cell based on the distance from the obstacle
         float dist = ptr->getDistance(pt);
-                        // Set the color -- be sure to set alpha to something non-zero!
+                        
         marker.color.r = 1 - dist/5.0*dist/5.0;
-        marker.color.g = dist/5.0*dist/5.0;//dist/5.0;
-        marker.color.b = 0.0;//1.0 - dist/5.0;
+        marker.color.g = dist/5.0*dist/5.0;
+        marker.color.b = 0.0;
         marker.color.a = 0.1;
                     
         marker.lifetime = ros::Duration();
