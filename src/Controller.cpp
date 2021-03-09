@@ -19,6 +19,8 @@ int count = 0; // count to see if the controller starts just now or not.
 
 Eigen::Vector3d goal, currPose;
 
+float delay;
+
 
 
 void path_cb(nav_msgs::Path traj)
@@ -27,13 +29,6 @@ void path_cb(nav_msgs::Path traj)
     trajectoryUpdated = true;
 }
 
-
-void goal_pose_cb(geometry_msgs::PoseStamped pose)
-{
-    goal(0) = pose.pose.position.x;
-    goal(1) = pose.pose.position.y;
-    goal(2) = 1.2;
-}
 
 void local_pose_cb(const geometry_msgs::PoseStamped pose)
 {
@@ -65,31 +60,8 @@ void control(ros::Publisher pub, ros::Rate rate)
             std::cout<<"Published point "<<i<<std::endl;
             pub.publish(traj_local.poses.at(i));
             ros::spinOnce();
-            ros::Duration(0.4).sleep();
+            ros::Duration(delay).sleep();
             i++;
-            
-            
-
-            /*    
-            Eigen::Vector3d diff = wp_eigen - currPose;
-
-            while(diff.norm()>0.10) // distance between current location and the next waypoint
-            {
-                // keep publishing the same point
-                std::cout<<"Published point is "<<i<<std::endl;
-                pub.publish(traj_local.poses.at(i));
-                diff = wp_eigen - currPose;
-                ros::spinOnce();
-
-                if(diff.norm()<0.3 || !ros::ok())
-                {
-                    i++;
-                    break;
-                }
-                
-            }
-            */
-
         }
         }
     
@@ -107,7 +79,6 @@ int main(int argc, char** argv)
     ros::NodeHandle n;
 
     ros::Subscriber path = n.subscribe<nav_msgs::Path>("/fastPlanner_path",1, path_cb);
-    ros::Subscriber goal = n.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal",1,goal_pose_cb); 
     ros::Subscriber loc = n.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose",10,local_pose_cb);
 
     ros::Publisher wp_pub = n.advertise<geometry_msgs::PoseStamped>("/mavros/setpoint_position/local",10);
@@ -119,6 +90,8 @@ int main(int argc, char** argv)
     
     ros::Rate rate(20);
     
+    std::cout<<"Enter delay between waypoints (in seconds) ";
+    std::cin>>delay;
 
     while(!trajectoryUpdated || !ros::ok())
     {
