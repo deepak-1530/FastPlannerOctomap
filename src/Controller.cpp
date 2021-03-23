@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "drone_control");
     ros::NodeHandle n;
 
-    ros::Subscriber path = n.subscribe<nav_msgs::Path>("/fastPlanner_path",1, path_cb);
+    ros::Subscriber path = n.subscribe<nav_msgs::Path>("/fastPlanner_spline",1, path_cb);
     ros::Subscriber loc = n.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose",10,local_pose_cb);
 
     ros::Publisher wp_pub = n.advertise<geometry_msgs::PoseStamped>("/mavros/setpoint_position/local",10);
