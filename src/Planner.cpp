@@ -13,7 +13,7 @@
 
 /** Planning and mapping headers **/
 #include"FastPlannerOctomap/kinodynamic_astar.h"
-
+#include"FastPlannerOctomap/bspline.h"
 #include"FastPlannerOctomap/Map.h"
 
 #include"std_msgs/Float64.h"
@@ -26,8 +26,7 @@ Eigen::Vector3d goalPose, currPose, startPose, startVel, startAcc, goalVel;
 /** Overall trajectory **/
 std::vector<Eigen::Vector3d> trajectory;
 nav_msgs::Path generatedPath;
-
-
+nav_msgs::Path splineTrajectory;
 
 /** time step to generate the trajectory **/
 float deltaT = 0.5;
@@ -95,7 +94,7 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
 ///////////////////////////////////////////////////////////////////
 /**  Plan the path until goal is reached **/
-void plan(ros::Publisher path,  ros::Publisher map)
+void plan(ros::Publisher path,  ros::Publisher splinePath, ros::Publisher map)
 {
     while(!DESTINATION_REACHED || ros::ok()) /** until the goal is reached or the node is killed, keep running the process **/
     {
@@ -189,10 +188,13 @@ void plan(ros::Publisher path,  ros::Publisher map)
             
             /** get the planned path **/
             std::vector<Eigen::Vector3d> currTraj = kAstar.getKinoTraj(deltaT);
-            prevTraj = currTraj;
-
+            
             count++;
 
+            /** generate bspline trajectory **/
+                
+
+            /*
             for(auto i = currTraj.begin(); i != currTraj.end(); i++)
             {
                 geometry_msgs::PoseStamped p;
@@ -228,9 +230,11 @@ void plan(ros::Publisher path,  ros::Publisher map)
                 }
                     ros::spinOnce();
             }
+            */
 
             // publish the path
             path.publish(generatedPath);
+            
 
             // insert this in the global trajectory
             trajectory.insert(trajectory.end(), currTraj.begin(), currTraj.end());
@@ -278,8 +282,9 @@ int main(int argc, char **argv)
     ros::Subscriber goal    = n.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal",1,goal_pose_cb);
  
     /** Publishers **/
-    ros::Publisher path     = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
-    ros::Publisher map      = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
+    ros::Publisher path       = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
+    ros::Publisher splinePath = n.advertise<nav_msgs::Path>("/fastPlanner_spline",1);
+    ros::Publisher map        = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
 
     ros::Rate rate(20);
 
@@ -312,7 +317,7 @@ int main(int argc, char **argv)
 
         kAstar.setParam(n); // set the fast planner parameters
 
-        plan(path, map);
+        plan(path, splinePath, map);
     }
 
     return 0;
