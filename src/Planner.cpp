@@ -26,14 +26,10 @@ Eigen::Vector3d goalPose, currPose, startPose, startVel, startAcc, goalVel;
 /** Overall trajectory **/
 std::vector<Eigen::Vector3d> trajectory;
 nav_msgs::Path generatedPath;
-nav_msgs::Path splineTrajectory;
+nav_msgs::Path splinePath;
 
 /** time step to generate the trajectory **/
 float deltaT = 0.5;
-
-/** Initialize the planner and mapping objects **/
-fast_planner::KinodynamicAstar kAstar;
-Map3D::OctoMapEDT costMap3D;
 
 /** decision variables **/
 bool goalReceived = false;
@@ -41,12 +37,20 @@ bool DESTINATION_REACHED = false;
 bool PLAN = false;
 int startOver = 0;
 
+/** bspline parameters **/
+float ctrlPtDist = 0.5;
+float maxVel = 3.0;
+float splineInterval = ctrlPtDist/maxVel;
+int order = 4;
+
 int count;     // count for planning iteration
 
 #define INF 1000 // inifinity
 
-// trajectory regeneration
-std::vector<Eigen::Vector3d> prevTraj;
+/** Initialize the planner and mapping objects **/
+fast_planner::KinodynamicAstar kAstar;
+Map3D::OctoMapEDT costMap3D;
+BSpline::BSpline bspline(splineInterval);
 
 
 /** Cost Map visualization **/
@@ -94,7 +98,7 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
 ///////////////////////////////////////////////////////////////////
 /**  Plan the path until goal is reached **/
-void plan(ros::Publisher path,  ros::Publisher splinePath, ros::Publisher map)
+void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
 {
     while(!DESTINATION_REACHED || ros::ok()) /** until the goal is reached or the node is killed, keep running the process **/
     {
@@ -192,9 +196,49 @@ void plan(ros::Publisher path,  ros::Publisher splinePath, ros::Publisher map)
             count++;
 
             /** generate bspline trajectory **/
-                
+            bspline.setControlPoints(currTraj);
 
-            /*
+            // generate the bspline trajectory
+            bspline.getBSplineTrajectory();
+
+            for(auto i = bspline.splineTrajectory.begin(); i!=bspline.splineTrajectory.end(); i++)
+            {
+               geometry_msgs::PoseStamped p;
+               Eigen::Vector3d pos = *i; 
+               Eigen::Vector3d pos_next;
+
+               std::cout<<"Waypoint in spline "<<pos.transpose()<<std::endl;
+
+                if(-INF<pos(0)<INF && -INF<pos(1)<INF && -INF<pos(2)<INF)
+                { 
+                    p.pose.position.x = pos(0);
+                    p.pose.position.y = pos(1);
+                    p.pose.position.z = pos(2);
+
+                if(i!=currTraj.end()-1)
+                    {
+                        pos_next = *(i+1);
+
+                        float currYaw = atan2((pos_next(1) - pos(1)),(pos_next(0) - pos(0)));
+                        float qz = sin(currYaw/2.0);
+                        float qw = cos(currYaw/2.0);
+
+                        p.pose.orientation.x = 0.0;
+                        p.pose.orientation.y = 0.0;
+                        p.pose.orientation.z = qz;
+                        p.pose.orientation.w = qw;
+
+                        splinePath.header.stamp = ros::Time::now();
+                        splinePath.header.frame_id = "map";
+                        splinePath.poses.push_back(p); 
+                    }
+                }
+                    ros::spinOnce();
+
+            }
+
+
+            
             for(auto i = currTraj.begin(); i != currTraj.end(); i++)
             {
                 geometry_msgs::PoseStamped p;
@@ -230,9 +274,9 @@ void plan(ros::Publisher path,  ros::Publisher splinePath, ros::Publisher map)
                 }
                     ros::spinOnce();
             }
-            */
+            
 
-            // publish the path
+            splinePub.publish(splinePath);
             path.publish(generatedPath);
             
 
@@ -312,6 +356,8 @@ int main(int argc, char **argv)
         goalVel  = Eigen::Vector3d::Zero();  // velocity at goal location set to 0
         startVel = Eigen::Vector3d::Zero(); // starting with 0 initial velocity i.e. static 
         startAcc = Eigen::Vector3d::Ones();  // set the starting acceleration as (1,1,1)
+
+        bspline.setOrder(order);
         
         std::cout<<"Starting planning now ..."<<std::endl;
 

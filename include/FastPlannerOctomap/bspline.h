@@ -130,6 +130,7 @@ void BSpline::BSpline::getBSplineTrajectory()
                 }
 
                 splineSegment.push_back(pt);
+                splineTrajectory.push_back(pt);
         }   
 
         splineSegments.push_back(splineSegment);
