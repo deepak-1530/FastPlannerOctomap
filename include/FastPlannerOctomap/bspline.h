@@ -22,14 +22,14 @@ class BSpline
         std::vector<std::vector<Eigen::Vector3d> > splineSegments; // spline trajectory of each segment
         BSpline(float interval_);                                                 // constructor
         void setOrder(int _order_);
-        void getBSplineTrajectory();
+        void setKnotVector();
+        void setNumSegments();
+        std::vector<Eigen::Vector3d> getBSplineTrajectory();
         void setControlPoints(std::vector<Eigen::Vector3d> _ctrlPoints_);
         float interval;
 
     private:
         double coxDeBoorBasis(int i, int k, float u); // this is the spline basis function --> using recursive cox-deboor equation to get bspline basis function
-        void setKnotVector();
-        void setNumSegments();
 
 };  
 } // namesapce
@@ -40,7 +40,7 @@ BSpline::BSpline::BSpline(float interval_)
 {
     order = 3;
     std::cout<<"Spline initialized \n";
-    interval = interval_;
+    interval = 0.2;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -48,8 +48,9 @@ BSpline::BSpline::BSpline(float interval_)
 void BSpline::BSpline::setControlPoints(std::vector<Eigen::Vector3d> _ctrlPoints_)
 {
     ctrlPoints = _ctrlPoints_;
-    setKnotVector();
-    setNumSegments();
+    numCtrlPoints = _ctrlPoints_.size();
+
+    std::cout<<"No. of control points are "<<numCtrlPoints<<std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -64,6 +65,8 @@ void BSpline::BSpline::setOrder(int _order_)
 void BSpline::BSpline::setKnotVector()
 {
     knotSize = order + numCtrlPoints + 1;  // m = n + p + 1
+
+    std::cout<<"knot vector size is "<<knotSize<<std::endl;
 
     /**
      *  use the bspline theory
@@ -92,6 +95,8 @@ void BSpline::BSpline::setKnotVector()
             //count += 0.25;
             knotVector.push_back(count+interval);//numCtrlPoints - order + 2.0);
         }
+
+        std::cout<<knotVector[i]<<std::endl;
         
     }
 
@@ -108,7 +113,7 @@ void BSpline::BSpline::setNumSegments()
 
 ///////////////////////////////////////////////////////////////////////////
 /** calculate the bsplines given the control points and the knot vectors **/
-void BSpline::BSpline::getBSplineTrajectory()
+std::vector<Eigen::Vector3d> BSpline::BSpline::getBSplineTrajectory()
 {
     /** spline for each segment **/
     std::vector<Eigen::Vector3d> splineSegment;
@@ -134,8 +139,9 @@ void BSpline::BSpline::getBSplineTrajectory()
         }   
 
         splineSegments.push_back(splineSegment);
-        splineSegment.clear();
     }
+
+    return splineSegment;
 
 }
 

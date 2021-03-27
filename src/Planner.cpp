@@ -29,7 +29,7 @@ nav_msgs::Path generatedPath;
 nav_msgs::Path splinePath;
 
 /** time step to generate the trajectory **/
-float deltaT = 0.5;
+float deltaT = 0.2;
 
 /** decision variables **/
 bool goalReceived = false;
@@ -98,7 +98,7 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
 ///////////////////////////////////////////////////////////////////
 /**  Plan the path until goal is reached **/
-void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
+void plan(ros::Publisher path,  ros::Publisher spline, ros::Publisher map)
 {
     while(!DESTINATION_REACHED || ros::ok()) /** until the goal is reached or the node is killed, keep running the process **/
     {
@@ -155,7 +155,7 @@ void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
             kAstar.setEnvironment(&DistMap);
 
             // visualize the EDT Map
-            costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
+            //costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
 
             // run the planner now (x is the status of the planner)
             int x;
@@ -195,13 +195,23 @@ void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
             
             count++;
 
+            if(currTraj.size() > 0)
+            {
             /** generate bspline trajectory **/
             bspline.setControlPoints(currTraj);
 
-            // generate the bspline trajectory
-            bspline.getBSplineTrajectory();
+            /** set knot vector **/
+            bspline.setKnotVector();
 
-            for(auto i = bspline.splineTrajectory.begin(); i!=bspline.splineTrajectory.end(); i++)
+            /** set no. of segments **/
+            bspline.setNumSegments();
+
+            // generate the bspline trajectory
+            std::vector<Eigen::Vector3d> spTraj = bspline.getBSplineTrajectory();
+
+            std::cout<<"Returned bspline size is "<<spTraj.size()<<std::endl;            
+          
+            for(auto i = spTraj.begin(); i!=spTraj.end() - currTraj.size(); i++)
             {
                geometry_msgs::PoseStamped p;
                Eigen::Vector3d pos = *i; 
@@ -215,7 +225,7 @@ void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
                     p.pose.position.y = pos(1);
                     p.pose.position.z = pos(2);
 
-                if(i!=currTraj.end()-1)
+                if(i!=spTraj.end()-1)
                     {
                         pos_next = *(i+1);
 
@@ -237,16 +247,15 @@ void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
 
             }
 
-
+            }
             
             for(auto i = currTraj.begin(); i != currTraj.end(); i++)
             {
                 geometry_msgs::PoseStamped p;
-                geometry_msgs::PoseStamped pROS;
                 Eigen::Vector3d pos = *i;
                 Eigen::Vector3d pos_next;
 
-                std::cout<<"Waypoint in current trajectory ..."<<pos<<std::endl;
+                //std::cout<<"Waypoint in current trajectory ..."<<pos<<std::endl;
 
                 if(-INF<pos(0)<INF && -INF<pos(1)<INF && -INF<pos(2)<INF)
                 { 
@@ -276,7 +285,7 @@ void plan(ros::Publisher path,  ros::Publisher splinePub, ros::Publisher map)
             }
             
 
-            splinePub.publish(splinePath);
+            spline.publish(splinePath);
             path.publish(generatedPath);
             
 
@@ -327,7 +336,7 @@ int main(int argc, char **argv)
  
     /** Publishers **/
     ros::Publisher path       = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
-    ros::Publisher splinePath = n.advertise<nav_msgs::Path>("/fastPlanner_spline",1);
+    ros::Publisher splinePub = n.advertise<nav_msgs::Path>("/fastPlanner_spline",1);
     ros::Publisher map        = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
 
     ros::Rate rate(20);
@@ -363,7 +372,7 @@ int main(int argc, char **argv)
 
         kAstar.setParam(n); // set the fast planner parameters
 
-        plan(path, splinePath, map);
+        plan(path, splinePub, map);
     }
 
     return 0;
