@@ -29,7 +29,7 @@ nav_msgs::Path generatedPath;
 nav_msgs::Path splinePath;
 
 /** time step to generate the trajectory **/
-float deltaT = 0.2;
+float deltaT = 0.20;
 
 /** decision variables **/
 bool goalReceived = false;
@@ -41,7 +41,7 @@ int startOver = 0;
 float ctrlPtDist = 0.5;
 float maxVel = 3.0;
 float splineInterval = ctrlPtDist/maxVel;
-int order = 4;
+int order = 3;
 
 int count;     // count for planning iteration
 
@@ -160,7 +160,7 @@ void plan(ros::Publisher path,  ros::Publisher spline, ros::Publisher map)
             // run the planner now (x is the status of the planner)
             int x;
             
-            if(count == 0 || startOver == 1)
+            if(/*count == 0 || */startOver == 1)
                 {
                     x = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, true, false, 0.0);
                     startOver = 0;
@@ -195,29 +195,25 @@ void plan(ros::Publisher path,  ros::Publisher spline, ros::Publisher map)
             
             count++;
 
+            std::vector<Eigen::Vector3d> spTraj;
+
             if(currTraj.size() > 0)
             {
             /** generate bspline trajectory **/
             bspline.setControlPoints(currTraj);
 
-            /** set knot vector **/
-            bspline.setKnotVector();
-
-            /** set no. of segments **/
-            bspline.setNumSegments();
-
             // generate the bspline trajectory
-            std::vector<Eigen::Vector3d> spTraj = bspline.getBSplineTrajectory();
+           spTraj = bspline.getBSplineTrajectory();
 
             std::cout<<"Returned bspline size is "<<spTraj.size()<<std::endl;            
           
-            for(auto i = spTraj.begin(); i!=spTraj.end() - currTraj.size(); i++)
+            for(auto i = spTraj.begin(); i!=spTraj.end() - 30; i++)
             {
                geometry_msgs::PoseStamped p;
                Eigen::Vector3d pos = *i; 
                Eigen::Vector3d pos_next;
 
-               std::cout<<"Waypoint in spline "<<pos.transpose()<<std::endl;
+               //std::cout<<"Waypoint in spline "<<pos.transpose()<<std::endl;
 
                 if(-INF<pos(0)<INF && -INF<pos(1)<INF && -INF<pos(2)<INF)
                 { 
@@ -336,7 +332,7 @@ int main(int argc, char **argv)
  
     /** Publishers **/
     ros::Publisher path       = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
-    ros::Publisher splinePub = n.advertise<nav_msgs::Path>("/fastPlanner_spline",1);
+    ros::Publisher splinePub  = n.advertise<nav_msgs::Path>("/fastPlanner_spline",1);
     ros::Publisher map        = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
 
     ros::Rate rate(20);

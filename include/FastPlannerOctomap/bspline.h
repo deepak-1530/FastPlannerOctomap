@@ -47,10 +47,20 @@ BSpline::BSpline::BSpline(float interval_)
 /** set control points for which spline is to be calculated **/
 void BSpline::BSpline::setControlPoints(std::vector<Eigen::Vector3d> _ctrlPoints_)
 {
+
+    // clear the vectors first to ensure previous points are not in the vector
+    knotVector.clear();
+    splineTrajectory.clear();
+    splineSegments.clear();
+    ctrlPoints.clear();
+
     ctrlPoints = _ctrlPoints_;
     numCtrlPoints = _ctrlPoints_.size();
 
     std::cout<<"No. of control points are "<<numCtrlPoints<<std::endl;
+
+    this->setKnotVector();
+    this->setNumSegments();
 }
 
 //////////////////////////////////////////////////////////////////////////
