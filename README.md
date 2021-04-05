@@ -12,6 +12,7 @@
 * Fixed size euclidean distance map is computed using EDT3D Library (https://github.com/OctoMap/octomap/tree/devel/dynamicEDT3D) for collision check.
 * Fixed Size EDT map gets updated around the drone after it travels a threshold distance from the previous location at which map was updated (here threshold is 1 metres).
 * Point cloud from the RGBD sensor (RealSense D415 and D455 were tested) is downsampled using pcl_ros
+* Zero mean Gaussian noise is added on the point cloud using pcl library
 
 > Installing mapping dependencies
 >> sudo apt-get install ros-$DISTRO-octomap-*  
@@ -84,9 +85,10 @@
 #### Simulation
 * *Terminal-1* : cd PX4-Autopilot && sudo no_sim=1 make px4_sitl_gazebo
 * *Terminal-2* : cd PX4-Autpilot && source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default && roslaunch gazebo_ros empty_world.launch (set your world file as required). On the gazebo window, select iris_depth_camera from the left panel.
-* *Terminal-3* : cd catkin_ws && **roslaunch FastPlannerOctomap MappingSim.launch** (give goal location using 2D Nav Goal option)
-* *Terminal-4* : **rosrun FastPlannerOctomap Planner** (or noYawPlanner if you want to plan the trajectory keeping the heading or yaw of the drone fixed). For the startOver option select either 1 or 0. Refer to the source code (FastPlannerOctomap/src/kinodynamic_astar.cpp and Planner.cpp for details). Also give the height (in metres) of the goal location when prompted.
-* *Terminal-5* : **rosrun FastPlannerOctomap Controller**
+* *Terminal-3* : rosrun FastPlannerOctomap pcNoise (then enter the variance value)
+* *Terminal-4* : cd catkin_ws && **roslaunch FastPlannerOctomap MappingSim.launch** (give goal location using 2D Nav Goal option)
+* *Terminal-5* : **rosrun FastPlannerOctomap Planner** (or noYawPlanner if you want to plan the trajectory keeping the heading or yaw of the drone fixed). For the startOver option select either 1 or 0. Refer to the source code (FastPlannerOctomap/src/kinodynamic_astar.cpp and Planner.cpp for details). Also give the height (in metres) of the goal location when prompted.
+* *Terminal-6* : **rosrun FastPlannerOctomap Controller**
 
 #### Running on hardware
 * *Terminal-1* : Launch the depth camera (I used realsense_ros package and rs_camera.launch file)
