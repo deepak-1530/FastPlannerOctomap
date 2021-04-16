@@ -19,17 +19,16 @@ int count = 0; // count to see if the controller starts just now or not.
 
 Eigen::Vector3d goal, currPose;
 
-float delay;
+float delay; // time between publishing two setpoints
 
-
-
+/** trajectory callback **/
 void path_cb(nav_msgs::Path traj)
 {
     trajectory = traj;
     trajectoryUpdated = true;
 }
 
-
+/** drone pose callback **/
 void local_pose_cb(const geometry_msgs::PoseStamped pose)
 {
     currPose(0) = pose.pose.position.x;
@@ -37,6 +36,7 @@ void local_pose_cb(const geometry_msgs::PoseStamped pose)
     currPose(2) = pose.pose.position.z;
 }
 
+/** MAVROS OFFBOARD Control **/
 void control(ros::Publisher pub, ros::Rate rate)
 {
     
@@ -53,6 +53,7 @@ void control(ros::Publisher pub, ros::Rate rate)
                 break;
             }
             Eigen::Vector3d wp_eigen;
+
             wp_eigen(0) = traj_local.poses.at(i).pose.position.x;
             wp_eigen(1) = traj_local.poses.at(i).pose.position.y;
             wp_eigen(2) = traj_local.poses.at(i).pose.position.z;
@@ -90,6 +91,7 @@ int main(int argc, char** argv)
     
     ros::Rate rate(20);
     
+    /** get delay from user **/
     std::cout<<"Enter delay between waypoints (in seconds) ";
     std::cin>>delay;
 
