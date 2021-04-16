@@ -3,7 +3,7 @@
                                                                                 **/
 /**
  * Octomap generation using point cloud from depth camera and pose from PX4-EKF
- * Fixed Window (8,6,6) EDT calculation using EDT3D library
+ * Fixed Window (8,8,8) EDT calculation using EDT3D library
  * Planning in the window using kino-dynamic A* algorithm
  * Horizon limitation due to limitation of range sensor
  * Drone controlled using PX4-Offboard position control
@@ -26,8 +26,6 @@ Eigen::Vector3d goalPose, currPose, startPose, startVel, startAcc, goalVel;
 /** Overall trajectory **/
 std::vector<Eigen::Vector3d> trajectory;
 nav_msgs::Path generatedPath;
-
-
 
 /** time step to generate the trajectory **/
 float deltaT = 0.5;
@@ -126,7 +124,6 @@ void plan(ros::Publisher path,  ros::Publisher map)
                 {
                     break;
                 }
-               // std::cout<<"Waiting for map to update ..."<<std::endl;
                 PLAN = false;
                 ros::spinOnce();
                 continue;
@@ -155,23 +152,23 @@ void plan(ros::Publisher path,  ros::Publisher map)
             costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
 
             // run the planner now (x is the status of the planner)
-            int x;
+            int status;
             
             if(count == 0 || startOver == 1)
                 {
-                    x = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, true, false, 0.0);
+                    status = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, true, false, 0.0);
                     startOver = 0;
                 }                
             else
                 {
-                    x = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, false, false, 0.0);
+                    status = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, false, false, 0.0);
                 }
             
             
             std::cout<<"Planner output status is >>>>> "<<x<<std::endl;
             std::cout<<"\n";
 
-            if(x==3)
+            if(status==3)
                 {
                     std::cout<<"No trajectory found ..."<<std::endl;
                     std::cout<<"Trying again ..."<<std::endl;
@@ -180,7 +177,7 @@ void plan(ros::Publisher path,  ros::Publisher map)
                     return;
                 }
 
-            if(x==2)
+            if(status==2)
                 {
                     std::cout<<"+++++++++++__________________Goal reached__________________++++++++++++ ...."<<std::endl;
                     DESTINATION_REACHED = true;
@@ -240,9 +237,9 @@ void plan(ros::Publisher path,  ros::Publisher map)
             kAstar.reset();
             ros::spinOnce();
 
-            if(!ros::ok() || x==2)
+            if(!ros::ok() || status==2)
             {
-                if(x==2)
+                if(status==2)
                 {
                     std::cout<<"***************** Reached goal ********************"<<std::endl;
                     return;
