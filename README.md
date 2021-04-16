@@ -16,21 +16,21 @@
 
 * *Installing mapping dependencies*
 
-   sudo apt-get install ros-$DISTRO-octomap-*  
-   sudo apt-get install ros-$DISTRO-pcl-ros
+      sudo apt-get install ros-$DISTRO-octomap-*  
+      sudo apt-get install ros-$DISTRO-pcl-ros
 
-   git clone https://github.com/OctoMap/octomap
-   >>*(Octomap source code is needed to generate EDT map (DynamicEDT3D class))*
+      git clone https://github.com/OctoMap/octomap 
+             (Octomap source code is needed to generate EDT map (DynamicEDT3D class))
 
-   cd octomap
+      cd octomap
 
-   mkdir build
+      mkdir build
 
-   cd build
+      cd build
 
-   cmake .. && make
+      cmake .. && make
 
-   sudo make install
+      sudo make install
 
 ![](EDT_Map.png)
 
@@ -52,15 +52,15 @@
 
 * Installing PX4-Autopilot
    
-   >> Refer to https://github.com/PX4/PX4-Autopilot for setting up PX4 for simulation
+       Refer to https://github.com/PX4/PX4-Autopilot for setting up PX4 for simulation
 
 * Installing Mavros
     
-  >> sudo apt-get install ros-$DISTRO-mavros ros-$DISTRO-mavros-extras
+      sudo apt-get install ros-$DISTRO-mavros ros-$DISTRO-mavros-extras
 
-  >> wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
+      wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
 
-   >> sudo bash ./install_geographiclib_datasets.sh   
+      sudo bash ./install_geographiclib_datasets.sh   
 
 #
 
