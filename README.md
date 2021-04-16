@@ -76,21 +76,15 @@
 ## Install and Run (Tested in ros melodic)
 * Building package
     
-    sudo apt-get install libeigen3-dev
+      sudo apt-get install libeigen3-dev
 
-    mkdir catkin_ws
-
-    cd catkin_ws
-   
-    mkdir src
-   
-    cd src
-   
-    git clone https://github.com/deepak-1530/FastPlannerOctomap
-
-    cd ..
-
-    catkin_make
+      mkdir catkin_ws
+      cd catkin_ws
+      mkdir src   
+      cd src
+      git clone https://github.com/deepak-1530/FastPlannerOctomap
+      cd ..
+      catkin_make
 
 ### Running the Planner
 * Simulation
