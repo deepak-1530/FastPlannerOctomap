@@ -165,7 +165,7 @@ void plan(ros::Publisher path,  ros::Publisher map)
                 }
             
             
-            std::cout<<"Planner output status is >>>>> "<<x<<std::endl;
+            std::cout<<"Planner output status is >>>>> "<<status<<std::endl;
             std::cout<<"\n";
 
             if(status==3)

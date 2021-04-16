@@ -33,7 +33,6 @@ float startHeading = 0.0;
 geometry_msgs::PoseStamped fix;
 float qX, qY, qZ, qW;
 
-
 /** time step to generate the trajectory **/
 float deltaT = 0.08;
 
@@ -119,7 +118,6 @@ void plan(ros::Publisher path, ros::Publisher map)
             startPose = currPose;
             startPose(0) += 0.5;  // start planning from a small distance away from the starting location  
             PLAN = true;
-            //count++;
         }
         else
         {
@@ -127,7 +125,6 @@ void plan(ros::Publisher path, ros::Publisher map)
             {
                 costMap3D.setStartPosition(currPose);
                 PLAN = true;
-                //count++;
             }
             else
             {
@@ -135,7 +132,7 @@ void plan(ros::Publisher path, ros::Publisher map)
                 {
                     break;
                 }
-               // std::cout<<"Waiting for map to update ..."<<std::endl;
+
                 PLAN = false;
                 ros::spinOnce();
                 continue;
@@ -164,25 +161,25 @@ void plan(ros::Publisher path, ros::Publisher map)
             costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
 
 
-            // run the planner now (x is the status of the planner)
-            int x;
+            // run the planner now 
+            int status;
             
             if(count == 0 || startOver == 1)
                 {
-                    x = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, true, false, 0.0);
+                    status = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, true, false, 0.0);
                     startOver = 0;
                 }                
             else
                 {
-                    x = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, false, false, 0.0);
+                    status = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, false, false, 0.0);
                 }
             
             
             
-            std::cout<<"Planner output status is >>>>> "<<x<<std::endl;
+            std::cout<<"Planner output status is >>>>> "<<status<<std::endl;
             std::cout<<"\n";
 
-            if(x==3)
+            if(status==3)
                 {
                     std::cout<<"No trajectory found ..."<<std::endl;
                     std::cout<<"Trying again ..."<<std::endl;
@@ -191,11 +188,10 @@ void plan(ros::Publisher path, ros::Publisher map)
                     return;
                 }
 
-            if(x==2)
+            if(status==2)
                 {
                     std::cout<<"+++++++++++__________________Goal reached__________________++++++++++++ ...."<<std::endl;
                     DESTINATION_REACHED = true;
-                    //break;
                 }
             
             /** get the planned path **/
@@ -244,9 +240,9 @@ void plan(ros::Publisher path, ros::Publisher map)
             kAstar.reset();
             ros::spinOnce();
 
-            if(!ros::ok() || x==2)
+            if(!ros::ok() || status==2)
             {
-                if(x==2)
+                if(status==2)
                 {
                     std::cout<<"***************** Reached goal ********************"<<std::endl;
                     return;
