@@ -52,9 +52,6 @@ Map3D::OctoMapEDT::OctoMapEDT()
     
     mapUpdateThreshold = 1.0;
 
-//    std::cout<<"_______Setting the EDT range ... "<<"("<<xRange<<","<<yRange<<","<<zRange<<")"<<std::endl;
-//    std::cout<<"\n";
-
 }
 
 
