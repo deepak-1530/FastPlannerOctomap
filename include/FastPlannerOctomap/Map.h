@@ -50,7 +50,7 @@ Map3D::OctoMapEDT::OctoMapEDT()
 
     edtMapRange =  8.0; 
     
-    mapUpdateThreshold = 1.0;
+    mapUpdateThreshold = 0.25;
 
 }
 
@@ -147,7 +147,7 @@ void Map3D::OctoMapEDT::getCostMapMarker(visualization_msgs::MarkerArray m, Dyna
     int count  = 0;
 
     // set a bounding box using the start and end variables
-    for(octomap::OcTree::leaf_bbx_iterator it = tree->begin_leafs_bbx(start, end, maxDepth), bbx_end = tree->end_leafs_bbx(); it != bbx_end; ++it)
+    for(octomap::OcTree::leaf_bbx_iterator it = tree->begin_leafs_bbx(start, end, maxDepth), bbx_end = tree->end_leafs_bbx(); it != bbx_end; std::advance(it,3))
     {
         std::cout<<it.getCoordinate()<<std::endl;
         octomap::point3d pt = it.getCoordinate();
@@ -180,17 +180,17 @@ void Map3D::OctoMapEDT::getCostMapMarker(visualization_msgs::MarkerArray m, Dyna
         marker.pose.orientation.w = 1;
 
         // set the scale of the marker
-        marker.scale.x = 0.25;
-        marker.scale.y = 0.25;
-        marker.scale.z = 0.25;
+        marker.scale.x = 0.30;
+        marker.scale.y = 0.30;
+        marker.scale.z = 0.30;
 
         // set the color of the cell based on the distance from the obstacle
         float dist = ptr->getDistance(pt);
                         
-        marker.color.r = 1 - dist/5.0*dist/5.0;
-        marker.color.g = dist/5.0*dist/5.0;
+        marker.color.r = (1 - dist/10.0)*(1 - dist/10.0);
+        marker.color.g = std::sqrt(std::sqrt(dist/10.0));
         marker.color.b = 0.0;
-        marker.color.a = 0.1;
+        marker.color.a = 0.5;
                     
         marker.lifetime = ros::Duration();
         m.markers.push_back(marker);

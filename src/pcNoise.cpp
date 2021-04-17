@@ -1,14 +1,6 @@
-// add noise to point cloud
-// read the point cloud in the format sensor_msgs::PointCloud2
-// convert to pcl point cloud using pcl_ros
-// then add gaussian noise to it using pcl library functions
-// re-convert the point cloud to PointCloud2 message type and publish
-
-// use this point cloud for octomap generation
-// compare the octomaps in cases of different noise parameters
-// then work on generating probabilistic EDT
-
-
+/**
+ * Adding gaussian noise to Pointcloud obtained from ROS
+**/
 #include<ros/ros.h>
 #include<sensor_msgs/PointCloud2.h>
 #include<pcl_conversions/pcl_conversions.h>
@@ -44,6 +36,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       xyz_cloud_filtered->points[points_i].y = xyz_cloud->points[points_i].y + static_cast<float>(distribution(generator));
       xyz_cloud_filtered->points[points_i].z = xyz_cloud->points[points_i].z + static_cast<float>(distribution(generator));
   }
+  
   sensor_msgs::PointCloud2 input_xyz_filtered;
   pcl::toROSMsg(*xyz_cloud_filtered, input_xyz_filtered);
   pub.publish (input_xyz_filtered);
