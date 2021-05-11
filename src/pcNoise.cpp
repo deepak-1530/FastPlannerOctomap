@@ -45,9 +45,10 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 int main(int argc, char** argv)
 {
     std::cout<<"Enter variance ";
-    std::cin>>var;
+    //std::cin>>var;
     ros::init(argc, argv, "pcl_basics");
     ros::NodeHandle nh;
+    nh.getParam("pcNoise/noise", var);
     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/camera/depth/points",1, cloud_cb);
     pub = nh.advertise<sensor_msgs::PointCloud2>("output",1);
     ros::spin();
