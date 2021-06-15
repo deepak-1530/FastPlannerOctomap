@@ -66,7 +66,7 @@ trajOptimizer::trajOptimizer::trajOptimizer()
         {
             std::normal_distribution<float> nd(means(j), sqrt(variances(j)));
 
-            for(k = 0; k<50; k++)
+            for(int k = 0; k<50; k++)
             {
                 noise.at(i) += weights(j)*nd(de);
             }
@@ -82,7 +82,7 @@ trajOptimizer::trajOptimizer::trajOptimizer()
 
 }
 
-std::vector<float> trajOptimizer::trajOptimizer::addNoise(float edtVal, float distToCam)
+std::vector<float> trajOptimizer::trajOptimizer::genEdtDistribution(float edtVal, float distToCam)
 {
     // apply greatest integer function to the edtVal to get the index for noise vector
     float edtIndex = floor(distToCam);
