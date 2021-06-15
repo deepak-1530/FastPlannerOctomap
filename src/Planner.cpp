@@ -16,6 +16,8 @@
 
 #include"FastPlannerOctomap/Map.h"
 
+#include"FastPlannerOctomap/trajOptimizer.h"
+
 #include"std_msgs/Float64.h"
 
 #include <math.h>
@@ -50,6 +52,11 @@ std::vector<Eigen::Vector3d> prevTraj;
 
 /** Cost Map visualization **/
 visualization_msgs::MarkerArray costMap_vis;
+
+
+/** trajectory optimization **/
+trajOptimizer::trajOptimizer optimizer;
+
 
 /**********************************************************************************************************************************************************
  * -------------------------------------------------------------------Callbacks---------------------------------------------------------------------------*

@@ -6,11 +6,6 @@
 #include<cmath>
 #include<random> // for adding gaussian random no.
 
-
-// pass the EDT pointer and the trajectory here
-// at each value of the EDT add certain samples of mixture of gaussian random noise
-// optimize trajectory then using bernstein polynomial
-
 namespace trajOptimizer
 {
     class trajOptimizer
