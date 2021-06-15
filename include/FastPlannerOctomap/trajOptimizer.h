@@ -3,6 +3,7 @@
 #include"Map.h"
 #include"utils.h"
 
+#include<cmath>
 #include<random> // for adding gaussian random no.
 
 
@@ -20,7 +21,7 @@ namespace trajOptimizer
             Eigen::Vector3d trajectory; // current trajectory obtained from fast planner
             std::vector<std::vector<Eigen::Vector3d> > noiseParams; // each entry in this vector is Vector3d(mean, variance, weight). Each entry for each range
             trajOptimizer();
-            void addNoiseToEdt(float edtVal, float distToCam); // this generates noise sampled from a mixture of gaussians and adds it to the current edt value
+            std::vector<float> genEdtDistribution(float edtVal, float distToCam); // this generates noise sampled from a mixture of gaussians and adds it to the current edt value
 
     };
 }
@@ -60,19 +61,54 @@ trajOptimizer::trajOptimizer::trajOptimizer()
         noiseParams.push_back(localNoiseParams);
 
         // generate the random samples based on these weights, means and variances
-        std::cout<<"----------------------############# Generating Noise now for a given GMM #####################-------------------"<<std::endl;
+        std::cout<<"--------- Generating Noise now for a given GMM --------------"<<std::endl;
 
         std::default_random_engine de(time(0));
         
+        std::vector<float> noise(50,0.0);
+
         for(int j = 0; j<3; j++)
         {
-            std::vector<float> noise;
+            std::normal_distribution<float> nd(means(j), sqrt(variances(j)));
+
+            for(k = 0; k<50; k++)
+            {
+                noise.at(i) += weights(j)*nd(de);
+            }
 
         }
+        
+        edtNoise.push_back(noise);
 
+        std::cout<<"GMM random numbers created with the given parameters "<<std::endl;
+        std::cout<<"*************************************************************************************"<<std::endl;
     }
 
 
 }
 
-void trajOptimizer::trajOptimizer::addNoise(float edtVal, float distToCam)
+std::vector<float> trajOptimizer::trajOptimizer::addNoise(float edtVal, float distToCam)
+{
+    // apply greatest integer function to the edtVal to get the index for noise vector
+    float edtIndex = floor(distToCam);
+
+    std::vector<float> edt_samples(50,0.0);
+
+    if(edtIndex >= 0)
+    {
+        std::vector<float> noiseVector = edtNoise.at(edtIndex);
+
+        for(int i = 0; i<edt_samples.size(); i++)
+        {
+            edt_samples.at(i) = edtVal + noiseVector.at(i);
+        }
+ 
+    }
+    else
+    {
+        std::cout<<"Occupied space ... "<<std::endl;
+    }
+
+    return edt_samples;
+    
+}
