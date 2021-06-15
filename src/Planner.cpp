@@ -144,6 +144,9 @@ void plan(ros::Publisher path,  ros::Publisher map)
             DynamicEDTOctomap DistMap(5.0, costMap3D.tree, costMap3D.start, costMap3D.end, false); // take unknwon region as unoccupied
             DistMap.update();
 
+            // set this as the costMap in the costMap3D object
+            costMap3D.costMap = &DistMap;
+
             // set planning range and pass cost map to planner
             kAstar.init(costMap3D.start, costMap3D.end, currPose);
             kAstar.setEnvironment(&DistMap);
