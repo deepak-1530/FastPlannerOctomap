@@ -6,22 +6,21 @@
 #include<cmath>
 #include<random> // for adding gaussian random no.
 
-namespace trajOptimizer
+namespace edtDistribution
 {
-    class trajOptimizer
+    class edtDistribution
     {
         public:
             Map3D::OctoMapEDT costMap3D; // to use the map parameters
             std::vector<std::vector<float> > edtNoise;
             Eigen::Vector3d trajectory; // current trajectory obtained from fast planner
             std::vector<std::vector<Eigen::Vector3d> > noiseParams; // each entry in this vector is Vector3d(mean, variance, weight). Each entry for each range
-            trajOptimizer();
+            edtDistribution();
             std::vector<float> genEdtDistribution(float edtVal, float distToCam); // this generates noise sampled from a mixture of gaussians and adds it to the current edt value
-
     };
 }
 
-trajOptimizer::trajOptimizer::trajOptimizer()
+edtDistribution::edtDistribution::edtDistribution()
 {
     std::cout<<"Trajectory optimizer initialized "<<std::endl;
 
@@ -82,7 +81,7 @@ trajOptimizer::trajOptimizer::trajOptimizer()
 
 }
 
-std::vector<float> trajOptimizer::trajOptimizer::genEdtDistribution(float edtVal, float distToCam)
+std::vector<float> edtDistribution::edtDistribution::genEdtDistribution(float edtVal, float distToCam)
 {
     // apply greatest integer function to the edtVal to get the index for noise vector
     float edtIndex = floor(distToCam);
