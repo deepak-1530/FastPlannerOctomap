@@ -16,7 +16,7 @@
 
 #include"FastPlannerOctomap/Map.h"
 
-#include"FastPlannerOctomap/trajOptimizer.h"
+#include"FastPlannerOctomap/edtDistribution.h"
 
 #include"std_msgs/Float64.h"
 
@@ -55,7 +55,7 @@ visualization_msgs::MarkerArray costMap_vis;
 
 
 /** trajectory optimization **/
-trajOptimizer::trajOptimizer optimizer;
+edtDistribution::edtDistribution edtDist;
 
 
 /**********************************************************************************************************************************************************
