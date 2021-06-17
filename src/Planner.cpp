@@ -199,7 +199,6 @@ void plan(ros::Publisher path,  ros::Publisher map)
             for(auto i = currTraj.begin(); i != currTraj.end(); i++)
             {
                 geometry_msgs::PoseStamped p;
-                geometry_msgs::PoseStamped pROS;
                 Eigen::Vector3d pos = *i;
                 Eigen::Vector3d pos_next;
 
