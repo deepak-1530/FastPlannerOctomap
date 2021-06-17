@@ -88,7 +88,7 @@ std::vector<float> edtDistribution::edtDistribution::genEdtDistribution(float ed
 
     std::vector<float> edt_samples(50,0.0);
 
-    if(edtIndex >= 0)
+    if(edtIndex > 0)
     {
         std::vector<float> noiseVector = edtNoise.at(edtIndex);
 
