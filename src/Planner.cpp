@@ -99,14 +99,14 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 }
 
 /** query edt for any published point **/
-void edt_cb(const geometry_msgs::PointStamped msg)
+void edt_cb(const geometry_msgs::PoseStamped msg)
 {
     octomap::point3d queryPt(msg.pose.position.x, msg.pose.position.y, msg.pose.position.z);
 
     float dist = costMap3D.costMap->getDistance(queryPt);
     std::cout<<"Distance of queried point "<<queryPt<<" is :-> "<<dist<<std::endl;
 
-    std_msgs::Float32 edt;
+    std_msgs::Float64 edt;
     edt.data = dist;
 
     queryPointEdt.publish(edt);
@@ -322,8 +322,8 @@ int main(int argc, char **argv)
     ros::Publisher pathEDT       = n.advertise<nav_msgs::Path>("/fastPlanner_path_EDT",1);
 
     /** EDT Subscriber and distance publisher **/
-    ros::Subscriber queryPoint    = n.advertise<geometry_msgs::PoseStamped>("/query_point_topic", 1, edt_cb);
-    queryPointEdt = n.advertise<std_msgs::Float32>("/query_point_distance", 1);
+    ros::Subscriber queryPoint    = n.subscribe<geometry_msgs::PoseStamped>("/query_point_topic", 1, edt_cb);
+    queryPointEdt = n.advertise<std_msgs::Float64>("/query_point_distance", 1);
 
     ros::Rate rate(20);
 
