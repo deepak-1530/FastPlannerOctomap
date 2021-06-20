@@ -210,8 +210,11 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
 
                 // store the distance to nearest obstacle for each wayoint
                 octomap::point3d pt_(pos(0), pos(1), pos(2));
-                float wayptDist = DistMap.getDistance(pt_);
-                pEdt.pose.position.x = wayptDist;
+                octomap::point3d ptObs;
+                DistMap.getDistanceAndClosestObstacle(pt_, dist, ptObst);
+                pEdt.pose.position.x = ptObst.x();
+                pEdt.pose.position.y = ptObst.y();
+                pEdt.pose.position.z = ptObst.z();
                 generatedPathEDT.header.stamp = ros::Time::now();
                 generatedPathEDT.header.frame_id = "map";
                 generatedPathEDT.poses.push_back(pEdt);
