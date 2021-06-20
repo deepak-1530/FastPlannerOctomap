@@ -56,6 +56,7 @@ std::vector<Eigen::Vector3d> prevTraj;
 /** Cost Map visualization **/
 visualization_msgs::MarkerArray costMap_vis;
 
+ros::Publisher queryPointEdt;
 
 /**********************************************************************************************************************************************************
  * -------------------------------------------------------------------Callbacks---------------------------------------------------------------------------*
@@ -95,6 +96,21 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
 
     std::cout<<"Goal Pose is ... "<<goalPose.transpose()<<std::endl;
     std::cout<<"\n";
+}
+
+/** query edt for any published point **/
+void edt_cb(const geometry_msgs::PointStamped msg)
+{
+    octomap::point3d queryPt(msg.pose.position.x, msg.pose.position.y, msg.pose.position.z);
+
+    float dist = costMap3D.costMap->getDistance(queryPt);
+    std::cout<<"Distance of queried point "<<queryPt<<" is :-> "<<dist<<std::endl;
+
+    std_msgs::Float32 edt;
+    edt.data = dist;
+
+    queryPointEdt.publish(edt);
+
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -160,7 +176,7 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
             // visualize the EDT Map
             costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
 
-            // run the planner now (x is the status of the planner)
+            // run the planner now
             int status;
             
             if(count == 0 || startOver == 1)
@@ -172,8 +188,7 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
                 {
                     status = kAstar.search(startPose, startVel, startAcc, goalPose, goalVel, false, false, 0.0);
                 }
-            
-            
+                        
             std::cout<<"Planner output status is >>>>> "<<status<<std::endl;
             std::cout<<"\n";
 
@@ -211,14 +226,15 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
                 // store the distance to nearest obstacle for each wayoint
                 octomap::point3d pt_(pos(0), pos(1), pos(2));
                 octomap::point3d ptObs;
+
                 DistMap.getDistanceAndClosestObstacle(pt_, dist, ptObst);
                 pEdt.pose.position.x = ptObst.x();
                 pEdt.pose.position.y = ptObst.y();
                 pEdt.pose.position.z = ptObst.z();
+                
                 generatedPathEDT.header.stamp = ros::Time::now();
                 generatedPathEDT.header.frame_id = "map";
                 generatedPathEDT.poses.push_back(pEdt);
-
 
                 std::cout<<"Waypoint in current trajectory ..."<<pos<<std::endl;
 
@@ -296,14 +312,18 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     /** Subscribers **/
-    ros::Subscriber oct     = n.subscribe<octomap_msgs::Octomap>("/octomap_binary",1,octomap_cb);
-    ros::Subscriber pos     = n.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose",10,local_pose_cb);
-    ros::Subscriber goal    = n.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal",1,goal_pose_cb);
+    ros::Subscriber oct          = n.subscribe<octomap_msgs::Octomap>("/octomap_binary",1,octomap_cb);
+    ros::Subscriber pos          = n.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose",10,local_pose_cb);
+    ros::Subscriber goal         = n.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal",1,goal_pose_cb);
  
     /** Publishers **/
-    ros::Publisher path     = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
-    ros::Publisher map      = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
-    ros::Publisher pathEDT  = n.advertise<nav_msgs::Path>("/fastPlanner_path_EDT",1);
+    ros::Publisher path          = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
+    ros::Publisher map           = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
+    ros::Publisher pathEDT       = n.advertise<nav_msgs::Path>("/fastPlanner_path_EDT",1);
+
+    /** EDT Subscriber and distance publisher **/
+    ros::Subscriber queryPoint    = n.advertise<geometry_msgs::PoseStamped>("/query_point_topic", 1, edt_cb);
+    queryPointEdt = n.advertise<std_msgs::Float32>("/query_point_distance", 1);
 
     ros::Rate rate(20);
 
