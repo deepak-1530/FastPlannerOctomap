@@ -28,6 +28,7 @@ namespace Map3D
             bool ifUpdateMap(Eigen::Vector3d pt1);
             void setStartPosition(Eigen::Vector3d pt);
             void setMapRange(Eigen::Vector3d pt);
+            bool isInMap(octomap::point3d pt);
             void setMinMax();
             void erase();
             void getCostMapMarker(visualization_msgs::MarkerArray m, DynamicEDTOctomap *ptr, ros::Publisher pub);
@@ -135,6 +136,16 @@ void Map3D::OctoMapEDT::setMapRange(Eigen::Vector3d pt)
 
     std::cout<<"Map from "<<start<<" to "<<end<<std::endl;
 
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/** check if a point lies in map or not **/
+bool Map3D::OctoMapEDT::isInMap(octomap::point3d pt)
+{
+    if ( start.x() <= pt.x() <= end.x() && start.y() <= pt.y() <= end.y() && start.z() <= pt.z() <= end.z())
+        return true;
+    else
+        return false;
 }
 
 

@@ -48,6 +48,8 @@ target_link_libraries(pubCamPose ${catkin_LIBRARIES})
 add_executable(pcNoise src/pcNoise.cpp)
 target_link_libraries(pcNoise ${catkin_LIBRARIES})
 
+add_executable(queryPt src/pubQueryPoint.cpp)
+target_link_libraries(queryPt ${catkin_LIBRARIES})
 
 
 
