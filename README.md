@@ -37,8 +37,7 @@
 #
 
 ### Planning
-* Path planning is done using Fast-Planner (https://github.com/HKUST-Aerial-Robotics/Fast-Planner) developed by HKUST Aerial Robotics Group.
-* Currently only the kino-dynamic A* star algorithm has been implemented (implementation of the Bspline optimization with octomap is going on currently)
+* Path planning is done using Fast-Planner (https://github.com/HKUST-Aerial-Robotics/Fast-Planner) developed by HKUST Aerial Robotics Group
 * Changes have been made in the source code in order to use it with Octomap.
 * Goal location is currently given in cartesian coordinates (using RViZ 2D Nav Goal and height of the goal is taken from the user)
 
