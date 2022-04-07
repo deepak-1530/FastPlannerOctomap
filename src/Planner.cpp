@@ -16,8 +16,6 @@
 
 #include"FastPlannerOctomap/Map.h"
 
-#include"FastPlannerOctomap/edtDistribution.h"
-
 #include"std_msgs/Float64.h"
 
 #include <math.h>
@@ -55,10 +53,6 @@ std::vector<Eigen::Vector3d> prevTraj;
 
 /** Cost Map visualization **/
 visualization_msgs::MarkerArray costMap_vis;
-
-ros::Publisher queryPointEdt;
-octomap::point3d qPt;
-bool queryPtUpdated = false;
 
 /**********************************************************************************************************************************************************
  * -------------------------------------------------------------------Callbacks---------------------------------------------------------------------------*
@@ -100,40 +94,10 @@ void goal_pose_cb(const geometry_msgs::PoseStamped pose)
     std::cout<<"\n";
 }
 
-/** query edt for any published point **/
-void edt_cb(const geometry_msgs::PoseStamped msg)
-{
-    octomap::point3d queryPt(msg.pose.position.x, msg.pose.position.y, msg.pose.position.z);
-
-    std::cout<<"Here "<<std::endl;
-    qPt = queryPt;
-    queryPtUpdated = true;
-    DynamicEDTOctomap costMap(5.0, costMap3D.tree, costMap3D.start, costMap3D.end, false);
-    
-    // check if the point is in the map
-    std_msgs::Float64 edt;
-    if(costMap3D.isInMap(queryPt))
-    {
-        std::cout<<costMap3D.start<<"  "<<costMap3D.end<<std::endl;
-        std::cout<<"Inside Map"<<std::endl;
-        std::cout<<queryPt<<std::endl;
-        float dist = costMap.getDistance(queryPt);
-        std::cout<<"Distance of queried point "<<queryPt<<" is :-> "<<dist<<std::endl;
-
-        edt.data = dist;
-    }
-    
-    else
-    {
-        edt.data = 1000;
-    }
-    queryPointEdt.publish(edt);
-    
-}
 
 ///////////////////////////////////////////////////////////////////
 /**  Plan the path until goal is reached **/
-void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
+void plan(ros::Publisher path,  ros::Publisher map)
 {
     while(!DESTINATION_REACHED || ros::ok()) /** until the goal is reached or the node is killed, keep running the process **/
     {
@@ -184,22 +148,8 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
             DynamicEDTOctomap DistMap(5.0, costMap3D.tree, costMap3D.start, costMap3D.end, false); // take unknwon region as unoccupied
             DistMap.update();
 
-            octomap::point3d qp(24.23, 0.0 ,1.25);
-
-
             // set this as the costMap in the costMap3D object
             costMap3D.costMap = &DistMap;
-
-            if(queryPtUpdated)
-            {std::cout<<"--------------------------------------------------------------- Distance is "<<costMap3D.costMap->getDistance(qp)<<std::endl;
-                std_msgs::Float64 edt;
-                edt.data = costMap3D.costMap->getDistance(qPt);
-                queryPointEdt.publish(edt);
-                queryPtUpdated = false;
-
-            }
-
-
 
             // set planning range and pass cost map to planner
             kAstar.init(costMap3D.start, costMap3D.end, currPose);
@@ -257,19 +207,6 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
                 Eigen::Vector3d pos = *i;
                 Eigen::Vector3d pos_next;
 
-                // store the distance to nearest obstacle for each wayoint
-                octomap::point3d pt_(pos(0), pos(1), pos(2));
-                octomap::point3d ptObs;
-
-                float dist;
-                DistMap.getDistanceAndClosestObstacle(pt_, dist, ptObs);
-                pEdt.pose.position.x = ptObs.x();
-                pEdt.pose.position.y = ptObs.y();
-                pEdt.pose.position.z = ptObs.z();
-                
-                generatedPathEDT.header.stamp = ros::Time::now();
-                generatedPathEDT.header.frame_id = "map";
-                generatedPathEDT.poses.push_back(pEdt);
 
               //  std::cout<<"Waypoint in current trajectory ..."<<pos<<std::endl;
 
@@ -303,8 +240,6 @@ void plan(ros::Publisher path,  ros::Publisher map, ros::Publisher pathEDT)
             // publish the path
             path.publish(generatedPath);
 
-            // publish the EDT data for the path
-            pathEDT.publish(generatedPathEDT);
 
             // insert this in the global trajectory
             trajectory.insert(trajectory.end(), currTraj.begin(), currTraj.end());
@@ -354,11 +289,6 @@ int main(int argc, char **argv)
     /** Publishers **/
     ros::Publisher path          = n.advertise<nav_msgs::Path>("/fastPlanner_path",1); 
     ros::Publisher map           = n.advertise<visualization_msgs::MarkerArray>("/costMap_marker_array",1); // one at a time
-    ros::Publisher pathEDT       = n.advertise<nav_msgs::Path>("/fastPlanner_path_EDT",1);
-
-    /** EDT Subscriber and distance publisher **/
-    ros::Subscriber queryPoint   = n.subscribe<geometry_msgs::PoseStamped>("/query_point_topic", 1, edt_cb);
-    queryPointEdt                = n.advertise<std_msgs::Float64>("/query_point_distance", 1);
 
     ros::Rate rate(20);
 
@@ -391,7 +321,7 @@ int main(int argc, char **argv)
 
         kAstar.setParam(n); // set the fast planner parameters
 
-        plan(path, map, pathEDT);
+        plan(path, map);
     }
 
     return 0;
