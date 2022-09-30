@@ -155,7 +155,7 @@ void plan(ros::Publisher path,  ros::Publisher spline, ros::Publisher map)
             kAstar.setEnvironment(&DistMap);
 
             // visualize the EDT Map
-            //costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
+            costMap3D.getCostMapMarker(costMap_vis, &DistMap, map);
 
             // run the planner now (x is the status of the planner)
             int x;
@@ -202,8 +202,11 @@ void plan(ros::Publisher path,  ros::Publisher spline, ros::Publisher map)
             /** generate bspline trajectory **/
             bspline.setControlPoints(currTraj);
 
+            // what we do here is to estimate the bspline trajectory (coefficients) which passes through these waypoints
+            // we then perform a non-linear optimization to generate the final smooth trajectory
+
             // generate the bspline trajectory
-           spTraj = bspline.getBSplineTrajectory();
+            spTraj = bspline.getBSplineTrajectory();
 
             std::cout<<"Returned bspline size is "<<spTraj.size()<<std::endl;            
           
